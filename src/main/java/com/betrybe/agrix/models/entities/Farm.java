@@ -9,44 +9,40 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
 
+/**
+ * Class Farm.
+ */
 @Entity
-@Table(name = "farms")
+@Table(name = "farm")
 public class Farm {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Integer id;
   private String name;
-  private int size;
+  private Double size;
 
   @OneToMany(mappedBy = "farm")
-  // Specify the property name in Crop class representing the relationship
   @JsonIgnore
-  private List<Crops> crops;
+  private List<Crop> crops;
 
-  public Farm(Long id, String name, int size, List<Crops> crop) {
-    // Default constructor required by JPA
+  public Farm() {
   }
 
-  public Farm(Long id, String name, int size) {
+  /**
+   * Constructor class farm.
+   */
+  public Farm(Integer id, String name, Double size) {
     this.id = id;
     this.name = name;
     this.size = size;
   }
 
-  public List<Crops> getCrops() {
-    return crops;
-  }
-
-  public void setCrops(List<Crops> crops) {
-    this.crops = crops;
-  }
-
-  public Long getId() {
+  public Integer getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 
@@ -58,11 +54,15 @@ public class Farm {
     this.name = name;
   }
 
-  public int getSize() {
+  public Double getSize() {
     return size;
   }
 
-  public void setSize(int size) {
+  public void setSize(Double size) {
     this.size = size;
+  }
+
+  public List<Crop> getCrops() {
+    return crops;
   }
 }

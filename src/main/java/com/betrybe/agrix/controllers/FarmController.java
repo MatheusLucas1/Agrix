@@ -1,11 +1,13 @@
-package com.betrybe.agrix.controllers;
+package com.betrybe.agrix.controller;
 
-import com.betrybe.agrix.controllers.dto.FarmDto;
-import com.betrybe.agrix.controllers.dto.ResponseDto;
+import com.betrybe.agrix.controllers.dto.CropDto;
+import com.betrybe.agrix.exception.NotFound;
+import com.betrybe.agrix.models.entities.Crop;
 import com.betrybe.agrix.models.entities.Farm;
 import com.betrybe.agrix.service.FarmService;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * FarmController class.
+ * Controller for class farm.
  */
 @RestController
-@RequestMapping(value = "/farms")
+@RequestMapping("/farms")
 public class FarmController {
 
   private final FarmService farmService;
@@ -32,39 +34,72 @@ public class FarmController {
   }
 
   /**
-   * createFarm class.
+   * Rota POST.
    */
-  @PostMapping()
-  public ResponseEntity<ResponseDto<Farm>> createFarm(@RequestBody FarmDto farmDto) {
-    Farm newFarm = farmService.insertFarm(farmDto.dtoToFarm());
-    ResponseDto<Farm> responseDto = new ResponseDto<>("farm created!", newFarm);
-    return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+  @PostMapping
+  public ResponseEntity<Farm> createFarm(@RequestBody Farm farm) {
+    Farm newFarm = farmService.createFarm(farm);
+    return new ResponseEntity<>(newFarm, HttpStatus.CREATED);
   }
 
   /**
-   * getAllFarms class.
+   * Rota get all Farms.
    */
-  @GetMapping()
-  public List<FarmDto> getAllFarms() {
-    List<Farm> allFarms = farmService.getAllFarms();
-    return allFarms.stream()
-        .map((farm) -> new FarmDto(farm.getId(), farm.getName(), farm.getSize(), farm.getCrops()))
-        .collect(Collectors.toList());
+  @GetMapping
+  public ResponseEntity<List<Farm>> getAllFarms() {
+    List<Farm> farms = farmService.getAllFarms();
+    return new ResponseEntity<>(farms, HttpStatus.OK);
   }
 
   /**
-   * getFarmById class.
+   * Rota get farm by id.
    */
-  @GetMapping("/{farmId}")
-  public ResponseEntity<ResponseDto<Farm>> getFarmById(@PathVariable Long farmId) {
-    Optional<Farm> optionalFarm = farmService.getFarmById(farmId);
-    if (optionalFarm.isEmpty()) {
-      ResponseDto<Farm> responseDto = new ResponseDto<>(
-          String.format("Fazenda não encontrada!", farmId), null);
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDto);
+  @GetMapping("/{id}")
+  public ResponseEntity<?> getFarmById(@PathVariable Integer id) {
+    try {
+      Farm farm = farmService.getFarmById(id);
+      return ResponseEntity.status(HttpStatus.OK).body(farm);
+    } catch (NotFound e) {
+      return ResponseEntity.status(e.getStatus()).body(e.getMessage());
     }
-    ResponseDto<Farm> responseDto = new ResponseDto<>("Fazenda encontrada com sucesso!",
-        optionalFarm.get());
-    return ResponseEntity.ok(responseDto);
+
+  }
+
+  /**
+   * Rota POST for create crops.
+   */
+  @PostMapping("/{id}/crops")
+  public ResponseEntity<?> createCrop(@PathVariable Integer id, @RequestBody Crop crop) {
+    try {
+      Crop newCrop = farmService.createCrop(id, crop);
+      Map<String, Object> respondeBody = new LinkedHashMap<>();
+      respondeBody.put("id", newCrop.getId());
+      respondeBody.put("name", newCrop.getName());
+      respondeBody.put("plantedArea", newCrop.getPlantedArea());
+      respondeBody.put("farmId", id);
+      return ResponseEntity.status(HttpStatus.CREATED).body(respondeBody);
+    } catch (NotFound e) {
+      return ResponseEntity.status(e.getStatus()).body(e.getMessage());
+    }
+  }
+
+  /**
+   * Rota GET for get crop for farm ID.
+   */
+  @GetMapping("/{id}/crops")
+  public ResponseEntity<?> getCropByFarmId(@PathVariable Integer id) {
+    try {
+      List<Crop> crops = farmService.getCropForFarmId(id);
+      List<CropDto> listCropsDto = crops.stream()
+          .map((crop -> new CropDto(
+              crop.getId(),
+              crop.getName(),
+              crop.getPlantedArea(),
+              crop.getFarm().getId()
+          ))).collect(Collectors.toList());
+      return ResponseEntity.status(HttpStatus.OK).body(listCropsDto);
+    } catch (NotFound e) {
+      return ResponseEntity.status(e.getStatus()).body(e.getMessage());
+    }
   }
 }
