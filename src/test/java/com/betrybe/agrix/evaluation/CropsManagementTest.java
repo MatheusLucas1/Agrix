@@ -38,7 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles("test")
 @DisplayName("Req 04-07")
 @DirtiesContext
-class CropManagementTest {
+class CropsManagementTest {
 
   MockMvc mockMvc;
 
